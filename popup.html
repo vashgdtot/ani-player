@@ -12,6 +12,12 @@
     <label for="mp4Url">MP4 URL</label>
     <textarea id="mp4Url" rows="4" placeholder="https://example.com/anime-01.mp4"></textarea>
     <section id="parsedInfo" class="card muted">輸入網址後會自動解析動畫名稱與集數。</section>
+    <details class="settings">
+      <summary>外部 file viewer 設定</summary>
+      <label for="externalViewerUrl">viewer.html 檔案路徑（選填）</label>
+      <input id="externalViewerUrl" placeholder="file:///C:/Downloads/ani-player/viewer.html">
+      <p class="hint">填寫後會改開這個 file URL，並把影片 URL 放進 ?url= 參數；留空則使用擴充套件內建 viewer。</p>
+    </details>
     <button id="openViewer" class="primary">開啟播放器</button>
     <p id="message" class="message" role="status"></p>
 

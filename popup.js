@@ -4,6 +4,7 @@ const openButton = document.querySelector('#openViewer');
 const message = document.querySelector('#message');
 const recentList = document.querySelector('#recentList');
 const clearForm = document.querySelector('#clearForm');
+const externalViewerUrlInput = document.querySelector('#externalViewerUrl');
 let parsedVideo = null;
 
 function setMessage(text, type = '') {
@@ -23,9 +24,36 @@ function updateParsedInfo() {
 }
 
 async function openViewer(video) {
-  await storageSet({ [PENDING_VIDEO_KEY]: { ...video, currentTime: video.currentTime || 0 } });
+  const externalViewerUrl = normalizeExternalViewerUrl(externalViewerUrlInput.value);
+  await storageSet({
+    [PENDING_VIDEO_KEY]: { ...video, currentTime: video.currentTime || 0 },
+    [EXTERNAL_VIEWER_URL_KEY]: externalViewerUrl
+  });
   await saveRecentWatch({ ...video, currentEpisode: video.episode, lastTime: video.currentTime || 0 });
-  await chrome.tabs.create({ url: chrome.runtime.getURL('viewer.html') });
+  await chrome.tabs.create({ url: buildViewerTabUrl(video, externalViewerUrl) });
+}
+
+function buildViewerTabUrl(video, externalViewerUrl) {
+  if (!externalViewerUrl) return chrome.runtime.getURL('viewer.html');
+
+  const viewerUrl = new URL(externalViewerUrl);
+  viewerUrl.searchParams.set('url', video.url);
+  viewerUrl.searchParams.set('animeName', video.animeName);
+  viewerUrl.searchParams.set('episode', String(video.episode));
+  viewerUrl.searchParams.set('episodeWidth', String(video.episodeWidth));
+  viewerUrl.searchParams.set('currentTime', String(video.currentTime || video.lastTime || 0));
+  return viewerUrl.toString();
+}
+
+function normalizeExternalViewerUrl(value) {
+  const rawValue = String(value || '').trim();
+  if (!rawValue) return '';
+  if (/^file:\/\//i.test(rawValue) || /^https?:\/\//i.test(rawValue)) return rawValue;
+
+  const normalizedPath = rawValue.replace(/\\/g, '/');
+  if (/^[a-z]:\//i.test(normalizedPath)) return `file:///${normalizedPath}`;
+  if (normalizedPath.startsWith('/')) return `file://${normalizedPath}`;
+  return rawValue;
 }
 
 async function renderRecent() {
@@ -84,6 +112,11 @@ function formatSeconds(seconds) {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
+async function loadSettings() {
+  const result = await storageGet({ [EXTERNAL_VIEWER_URL_KEY]: '' });
+  externalViewerUrlInput.value = result[EXTERNAL_VIEWER_URL_KEY] || '';
+}
+
 urlInput.addEventListener('input', updateParsedInfo);
 clearForm.addEventListener('click', () => {
   urlInput.value = '';
@@ -97,5 +130,10 @@ openButton.addEventListener('click', async () => {
   }
   await openViewer(parsedVideo);
 });
+externalViewerUrlInput.addEventListener('change', async () => {
+  externalViewerUrlInput.value = normalizeExternalViewerUrl(externalViewerUrlInput.value);
+  await storageSet({ [EXTERNAL_VIEWER_URL_KEY]: externalViewerUrlInput.value });
+});
 
+loadSettings();
 renderRecent();

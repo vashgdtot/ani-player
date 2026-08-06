@@ -48,3 +48,21 @@ File 模式注意事項：
 - File 模式不是 extension 頁面，不能使用 `chrome.storage.local`；本專案會自動退回使用該 file origin 的 `localStorage` 保存最近觀看。
 - Popup 無法可靠知道你的實際磁碟路徑，也無法在 Chrome Web Store 發布後取得安裝檔案的 `C:/...` 路徑；因此要用 file 模式時，建議自行建立書籤或捷徑。
 - 其他第三方擴充套件要注入 `file:///...` 頁面時，通常需要在 Chrome 擴充套件管理頁為該第三方擴充套件開啟「允許存取檔案網址」。
+
+## 讓 popup 固定開啟你指定的 file viewer
+
+擴充套件無法自動取得你電腦上的原始專案資料夾路徑，例如 `C:/Downloads/ani-player-codex-chrome-manifest-v3/viewer.html`。原因是 extension 正式載入後看到的是 `chrome-extension://<extension-id>/...`，不是你磁碟上的開發資料夾位置。
+
+如果你已確認 `file:///C:/.../viewer.html` 可以啟用你要的 HTML5 擴充套件，可以在 popup 的「外部 file viewer 設定」中直接寫死這個路徑，例如：
+
+```text
+file:///C:/Downloads/ani-player-codex-chrome-manifest-v3/viewer.html
+```
+
+也可以貼 Windows 路徑，popup 會自動轉成 file URL：
+
+```text
+C:\Downloads\ani-player-codex-chrome-manifest-v3\viewer.html
+```
+
+之後按「開啟播放器」時，extension 會開啟你指定的 file viewer，並自動附上 `?url=...&animeName=...&episode=...` 參數。

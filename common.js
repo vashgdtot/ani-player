@@ -1,5 +1,6 @@
 const RECENT_WATCHES_KEY = 'recentWatches';
 const PENDING_VIDEO_KEY = 'pendingVideo';
+const EXTERNAL_VIEWER_URL_KEY = 'externalViewerUrl';
 const MAX_RECENT_WATCHES = 50;
 
 function parseMp4Url(rawUrl) {
