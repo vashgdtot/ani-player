@@ -134,12 +134,26 @@ async function getRecentWatches() {
   return Array.isArray(result[RECENT_WATCHES_KEY]) ? result[RECENT_WATCHES_KEY] : [];
 }
 
+function getRecentWatchId(entry) {
+  const animeKey = normalizeAnimeKey(entry.animeName);
+  return animeKey ? `anime:${animeKey}` : `url:${entry.url}`;
+}
+
+function normalizeAnimeKey(name) {
+  return String(name || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+}
+
 async function saveRecentWatch(entry) {
   const watches = await getRecentWatches();
   const now = new Date().toISOString();
-  const id = entry.id || `${entry.animeName}|${entry.url}`;
+  const id = getRecentWatchId(entry);
+  const animeKey = normalizeAnimeKey(entry.animeName);
   const nextEntry = { ...entry, id, updatedAt: now };
-  const filtered = watches.filter((item) => item.id !== id);
+  const filtered = watches.filter((item) => {
+    const sameId = item.id === id || item.id === entry.id;
+    const sameAnime = animeKey && normalizeAnimeKey(item.animeName) === animeKey;
+    return !sameId && !sameAnime;
+  });
   await storageSet({ [RECENT_WATCHES_KEY]: [nextEntry, ...filtered].slice(0, MAX_RECENT_WATCHES) });
   return nextEntry;
 }
