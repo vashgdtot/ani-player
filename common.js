@@ -14,16 +14,17 @@ function parseMp4Url(rawUrl) {
   }
 
   const pathname = decodeURIComponent(parsed.pathname);
-  if (!pathname.toLowerCase().endsWith('.mp4')) {
-    throw new Error('請輸入 .mp4 影片網址');
+  if (!isMp4Resource(parsed)) {
+    throw new Error('請輸入 MP4 影片網址，或帶有 ?d=mp4 的影片網址');
   }
 
-  const fileName = pathname.split('/').filter(Boolean).pop() || 'video.mp4';
+  const fileName = getVideoFileName(pathname, parsed);
   const baseName = fileName.replace(/\.mp4$/i, '');
-  const episodeMatch = findEpisodeMatch(baseName) || findEpisodeMatch(pathname);
+  const searchableName = stripBracketTags(baseName);
+  const episodeMatch = findEpisodeMatch(searchableName) || findEpisodeMatch(stripBracketTags(pathname));
   const episode = episodeMatch ? Number.parseInt(episodeMatch.value, 10) : 1;
   const episodeToken = episodeMatch ? episodeMatch.full : String(episode);
-  const inferredName = inferAnimeName(baseName, episodeMatch);
+  const inferredName = inferAnimeName(searchableName, episodeMatch);
 
   return {
     url,
@@ -35,8 +36,23 @@ function parseMp4Url(rawUrl) {
   };
 }
 
+function isMp4Resource(parsed) {
+  return parsed.pathname.toLowerCase().endsWith('.mp4') || parsed.searchParams.get('d')?.toLowerCase() === 'mp4';
+}
+
+function getVideoFileName(pathname, parsed) {
+  const pathName = pathname.split('/').filter(Boolean).pop() || '';
+  if (pathName) return pathName;
+  return parsed.hostname || 'video.mp4';
+}
+
+function stripBracketTags(text) {
+  return text.replace(/\[[^\]]*\]|\([^)]*\)/g, ' ');
+}
+
 function findEpisodeMatch(text) {
   const patterns = [
+    /[-_\s]+(\d{1,4})(?=\s*(?:$|[-_\s]|話|集|\[))/i,
     /(?:^|[^a-z0-9])(?:ep|episode|第)\s*(\d{1,4})(?:話|集)?(?=$|[^a-z0-9])/i,
     /(?:^|[^\d])(\d{1,4})(?:話|集)(?=$|[^\d])/,
     /(?:^|[^\d])(\d{1,4})(?=$|[^\d]*$)/
@@ -58,7 +74,6 @@ function inferAnimeName(baseName, episodeMatch) {
 
   return name
     .replace(/[._-]+/g, ' ')
-    .replace(/\[[^\]]*\]|\([^)]*\)/g, '')
     .replace(/\b(?:ep|episode)\b\s*$/i, '')
     .replace(/第\s*$/u, '')
     .trim();
@@ -67,17 +82,43 @@ function inferAnimeName(baseName, episodeMatch) {
 function buildEpisodeUrl(currentUrl, currentEpisode, nextEpisode, width) {
   const paddedCurrent = String(currentEpisode).padStart(width, '0');
   const paddedNext = String(nextEpisode).padStart(width, '0');
+
+  try {
+    const parsed = new URL(currentUrl);
+    const decodedPath = decodeURIComponent(parsed.pathname);
+    const nextPath = replaceEpisodeInText(decodedPath, paddedCurrent, paddedNext);
+    if (nextPath !== decodedPath) {
+      parsed.pathname = nextPath;
+      return parsed.toString();
+    }
+  } catch {
+    // Fall back to string replacement for non-standard URLs.
+  }
+
+  const nextUrl = replaceEpisodeInText(currentUrl, paddedCurrent, paddedNext);
+  if (nextUrl !== currentUrl) return nextUrl;
+
+  if (/\.mp4(\?.*)?$/i.test(currentUrl)) {
+    return currentUrl.replace(/\.mp4(\?.*)?$/i, `${paddedNext}.mp4$1`);
+  }
+
+  const separator = currentUrl.includes('?') ? '&' : '?';
+  return `${currentUrl}${separator}episode=${paddedNext}`;
+}
+
+function replaceEpisodeInText(text, paddedCurrent, paddedNext) {
   const replacements = [
-    [new RegExp(`(ep(?:isode)?[-_\\s]*)${paddedCurrent}(?=[^0-9]*\\.mp4)`, 'i'), `$1${paddedNext}`],
-    [new RegExp(`(第[-_\\s]*)${paddedCurrent}((?:話|集)?(?=[^0-9]*\\.mp4))`, 'i'), `$1${paddedNext}$2`],
-    [new RegExp(`(^|[^0-9])${paddedCurrent}([^0-9]*\\.mp4)`, 'i'), `$1${paddedNext}$2`]
+    [new RegExp(`([-_\\s]+)${paddedCurrent}(?=\\s*(?:$|[-_\\s]|話|集|\\[))`, 'i'), `$1${paddedNext}`],
+    [new RegExp(`(ep(?:isode)?[-_\\s]*)${paddedCurrent}(?=$|[^0-9])`, 'i'), `$1${paddedNext}`],
+    [new RegExp(`(第[-_\\s]*)${paddedCurrent}((?:話|集)?(?=$|[^0-9]))`, 'i'), `$1${paddedNext}$2`],
+    [new RegExp(`(^|[^0-9])${paddedCurrent}([^0-9]*(?:\\.mp4)?(?:\\?.*)?$)`, 'i'), `$1${paddedNext}$2`]
   ];
 
   for (const [pattern, replacement] of replacements) {
-    if (pattern.test(currentUrl)) return currentUrl.replace(pattern, replacement);
+    if (pattern.test(text)) return text.replace(pattern, replacement);
   }
 
-  return currentUrl.replace(/\.mp4(\?.*)?$/i, `${paddedNext}.mp4$1`);
+  return text;
 }
 
 async function storageGet(defaults) {
