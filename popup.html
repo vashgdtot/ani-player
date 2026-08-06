@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ani MP4 Player</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="popup-body">
+  <main class="popup-shell">
+    <h1>Ani MP4 Player</h1>
+    <label for="mp4Url">MP4 URL</label>
+    <textarea id="mp4Url" rows="4" placeholder="https://example.com/anime-01.mp4"></textarea>
+    <section id="parsedInfo" class="card muted">輸入網址後會自動解析動畫名稱與集數。</section>
+    <button id="openViewer" class="primary">開啟播放器</button>
+    <p id="message" class="message" role="status"></p>
+
+    <section class="recent-header">
+      <h2>最近觀看</h2>
+      <button id="clearForm" class="ghost">清空</button>
+    </section>
+    <div id="recentList" class="recent-list"></div>
+  </main>
+  <script src="common.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

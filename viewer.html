@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ani MP4 Viewer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="viewer-body">
+  <aside class="sidebar">
+    <h1 id="animeTitle">Ani MP4 Player</h1>
+    <p id="episodeSummary" class="muted"></p>
+    <nav id="episodeList" class="episode-list" aria-label="集數列表"></nav>
+  </aside>
+  <main class="viewer-main">
+    <header class="viewer-toolbar">
+      <button id="prevEpisode">上一集</button>
+      <button id="nextEpisode" class="primary">下一集</button>
+      <span id="status" role="status"></span>
+    </header>
+    <video id="player" controls preload="metadata"></video>
+  </main>
+  <script src="common.js"></script>
+  <script src="viewer.js"></script>
+</body>
+</html>
