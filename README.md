@@ -31,3 +31,20 @@ Chrome Manifest V3 擴充套件，用來輸入 MP4 資源網址、解析動畫�
 - 若目標是讓其他第三方 HTML5 擴充套件能注入播放器，localhost 方案較有機會，因為它是一般 `http://localhost` 網頁；但仍取決於該第三方擴充套件的 host permissions 與 content script 規則。
 
 因此，本專案若要支援 localhost 模式，建議新增一個「外部播放器模式」設定：預設維持目前的 `chrome-extension://.../viewer.html`，需要第三方擴充套件注入時再讓使用者自行啟動 localhost viewer。
+
+## 可以直接開 `file:///.../viewer.html` 嗎？
+
+可以手動開，也可以把播放器網址做成 `file:///C:/Downloads/ani-player-codex-chrome-manifest-v3/viewer.html?url=<encoded-mp4-url>`，但這不是把 extension page 轉換成 file URL，而是用磁碟上的同一份 HTML 檔案以一般 file page 執行。
+
+範例：
+
+```text
+file:///C:/Downloads/ani-player-codex-chrome-manifest-v3/viewer.html?url=https%3A%2F%2Fresources.ani.rip%2F2026-7%2F%255BANi%255D%2520%25E7%259B%259C%25E5%25A2%2593%25E7%258E%258B%2520-%252005%2520%255B1080P%255D%255BBaha%255D%255BWEB-DL%255D%255BAAC%2520AVC%255D%255BCHT%255D%3Fd%3Dmp4
+```
+
+File 模式注意事項：
+
+- 本專案已讓 `viewer.html` 支援 `?url=` 參數，所以即使不是從 popup 開啟，也能解析影片 URL 並播放。
+- File 模式不是 extension 頁面，不能使用 `chrome.storage.local`；本專案會自動退回使用該 file origin 的 `localStorage` 保存最近觀看。
+- Popup 無法可靠知道你的實際磁碟路徑，也無法在 Chrome Web Store 發布後取得安裝檔案的 `C:/...` 路徑；因此要用 file 模式時，建議自行建立書籤或捷徑。
+- 其他第三方擴充套件要注入 `file:///...` 頁面時，通常需要在 Chrome 擴充套件管理頁為該第三方擴充套件開啟「允許存取檔案網址」。

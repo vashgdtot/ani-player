@@ -11,12 +11,12 @@ let saveTimer = null;
 
 async function init() {
   const result = await storageGet({ [PENDING_VIDEO_KEY]: null });
-  if (!result[PENDING_VIDEO_KEY]) {
-    statusText.textContent = '找不到要播放的影片，請從 Popup 開啟。';
+  const video = getVideoFromQuery() || result[PENDING_VIDEO_KEY];
+  if (!video) {
+    statusText.textContent = '找不到要播放的影片，請從 Popup 開啟，或在網址加上 ?url=影片網址。';
     return;
   }
 
-  const video = result[PENDING_VIDEO_KEY];
   state = {
     ...video,
     currentEpisode: video.episode || video.currentEpisode || 1,
@@ -26,6 +26,26 @@ async function init() {
   };
   await playEpisode(state.currentEpisode, video.url, video.currentTime || video.lastTime || 0);
   render();
+}
+
+function getVideoFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const url = params.get('url');
+  if (!url) return null;
+
+  try {
+    const parsed = parseMp4Url(url);
+    return {
+      ...parsed,
+      animeName: params.get('animeName') || parsed.animeName,
+      episode: Number.parseInt(params.get('episode') || parsed.episode, 10),
+      episodeWidth: Number.parseInt(params.get('episodeWidth') || parsed.episodeWidth, 10),
+      currentTime: Number.parseFloat(params.get('currentTime') || '0')
+    };
+  } catch (error) {
+    statusText.textContent = error.message || '網址參數中的影片 URL 無法解析。';
+    return null;
+  }
 }
 
 async function playEpisode(episode, url, startTime = 0) {

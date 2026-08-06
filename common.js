@@ -121,12 +121,27 @@ function replaceEpisodeInText(text, paddedCurrent, paddedNext) {
   return text;
 }
 
+function hasChromeStorage() {
+  return typeof chrome !== 'undefined' && chrome.storage?.local;
+}
+
 async function storageGet(defaults) {
-  return chrome.storage.local.get(defaults);
+  if (hasChromeStorage()) return chrome.storage.local.get(defaults);
+
+  const result = { ...defaults };
+  for (const key of Object.keys(defaults)) {
+    const storedValue = localStorage.getItem(key);
+    if (storedValue !== null) result[key] = JSON.parse(storedValue);
+  }
+  return result;
 }
 
 async function storageSet(values) {
-  return chrome.storage.local.set(values);
+  if (hasChromeStorage()) return chrome.storage.local.set(values);
+
+  for (const [key, value] of Object.entries(values)) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
 }
 
 async function getRecentWatches() {
