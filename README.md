@@ -13,3 +13,21 @@ Chrome Manifest V3 擴充套件，用來輸入 MP4 資源網址、解析動畫�
 3. 若你能修改那個第三方擴充套件，只能嘗試讓它支援本擴充套件頁面或改成與本擴充套件整合；已發布的第三方擴充套件通常無法由本專案單方面強制啟用。
 
 本專案目前採用第一種策略：使用原生 `<video controls>`，並把上一集、下一集、進度保存、最近觀看等功能做在本擴充套件內。
+
+## 可以把 `chrome-extension://.../viewer.html` 變成 localhost 嗎？
+
+不能把同一個擴充套件內部頁面「改寫」成正常的 `http://localhost/...` URL；`chrome-extension://` 是 Chrome 載入擴充套件封裝檔案時使用的固定來源。若要讓網址變成 `localhost`，必須另外用本機 HTTP 伺服器提供一份播放器頁面，例如 `http://localhost:5173/viewer.html`。
+
+可行架構如下：
+
+1. 保留 Chrome extension 的 popup 與 storage 功能。
+2. 另外建立或啟動本機靜態伺服器來提供播放器頁面。
+3. Popup 按下「開啟播放器」時改開 `http://localhost:<port>/viewer.html?...`，並用 query string、`postMessage`、本機 API 或 Native Messaging 把影片 URL 與播放資訊交給 localhost 頁面。
+
+限制與代價：
+
+- Chrome MV3 擴充套件本身不能像 Node.js 一樣直接開一個 HTTP server 監聽 localhost port。
+- 如果使用 localhost 播放器，`chrome.storage.local` 不能直接在 localhost 頁面使用；最近觀看與進度需要改用 query string、localStorage、後端 API，或由 extension 與頁面通訊同步。
+- 若目標是讓其他第三方 HTML5 擴充套件能注入播放器，localhost 方案較有機會，因為它是一般 `http://localhost` 網頁；但仍取決於該第三方擴充套件的 host permissions 與 content script 規則。
+
+因此，本專案若要支援 localhost 模式，建議新增一個「外部播放器模式」設定：預設維持目前的 `chrome-extension://.../viewer.html`，需要第三方擴充套件注入時再讓使用者自行啟動 localhost viewer。
