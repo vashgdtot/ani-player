@@ -69,6 +69,9 @@ textarea, input {
 .viewer-toolbar { justify-content: flex-start; }
 #status { color: var(--muted); }
 video { width: 100%; height: calc(100vh - 96px); background: #000; border-radius: 16px; }
+video:focus, video:focus-visible { outline: none; box-shadow: none; }
+video::-webkit-media-controls { outline: none; }
+video::backdrop { background: #000; }
 @media (max-width: 760px) {
   .viewer-body { grid-template-columns: 1fr; }
   .sidebar { border-right: 0; border-bottom: 1px solid #2b3348; }

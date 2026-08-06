@@ -128,6 +128,33 @@ nextButton.addEventListener('click', async () => {
   }
 });
 
+function removePlayerFocus() {
+  requestAnimationFrame(() => player.blur());
+}
+
+function handlePlayerShortcut(event) {
+  if (event.defaultPrevented || !document.fullscreenElement || event.altKey || event.ctrlKey || event.metaKey) return;
+
+  const seekMap = {
+    ArrowLeft: -5,
+    KeyJ: -10,
+    ArrowRight: 5,
+    KeyL: 10
+  };
+  const seekSeconds = seekMap[event.code];
+  if (!seekSeconds) return;
+
+  event.preventDefault();
+  const nextTime = Math.max(0, Math.min((player.duration || 0), player.currentTime + seekSeconds));
+  if (Number.isFinite(nextTime)) player.currentTime = nextTime;
+  removePlayerFocus();
+}
+
+document.addEventListener('keydown', handlePlayerShortcut);
+player.addEventListener('keydown', handlePlayerShortcut);
+player.addEventListener('keyup', removePlayerFocus);
+player.addEventListener('click', removePlayerFocus);
+
 player.addEventListener('timeupdate', () => {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(persistProgress, 500);
