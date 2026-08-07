@@ -77,6 +77,7 @@ function inferAnimeName(baseName, episodeMatch) {
     .replace(/[._-]+/g, ' ')
     .replace(/\b(?:ep|episode)\b\s*$/i, '')
     .replace(/第\s*$/u, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
