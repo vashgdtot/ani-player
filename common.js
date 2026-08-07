@@ -53,7 +53,7 @@ function stripBracketTags(text) {
 
 function findEpisodeMatch(text) {
   const patterns = [
-    /[-_\s]+(\d{1,4})(?=\s*(?:$|[-_\s]|話|集|\[))/i,
+    /[-_]\s*(\d{1,4})(?=\s*(?:$|[-_\s]|話|集|\[))/i,
     /(?:^|[^a-z0-9])(?:ep|episode|第)\s*(\d{1,4})(?:話|集)?(?=$|[^a-z0-9])/i,
     /(?:^|[^\d])(\d{1,4})(?:話|集)(?=$|[^\d])/,
     /(?:^|[^\d])(\d{1,4})(?=$|[^\d]*$)/
