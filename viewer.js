@@ -132,6 +132,31 @@ function removePlayerFocus() {
   requestAnimationFrame(() => player.blur());
 }
 
+function handlePlayerSpace(event) {
+  if (
+    event.defaultPrevented ||
+    !document.fullscreenElement ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey
+  ) return;
+
+  if (event.code !== 'Space') return;
+
+  event.preventDefault();
+
+  if (player.paused) {
+    player.play();
+  } else {
+    player.pause();
+  }
+
+  removePlayerFocus();
+}
+
+document.addEventListener('keydown', handlePlayerSpace);
+player.addEventListener('keydown', handlePlayerSpace);
+
 document.addEventListener('keydown', removePlayerFocus, true);
 player.addEventListener('keydown', removePlayerFocus);
 player.addEventListener('keyup', removePlayerFocus);
