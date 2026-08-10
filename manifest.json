@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Ani MP4 Player",
+  "version": "1.0.0",
+  "description": "輸入 MP4 URL，解析動畫與集數，使用 HTML5 播放器追蹤最近觀看進度。",
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "Ani MP4 Player",
+    "default_popup": "popup.html"
+  }
+}
